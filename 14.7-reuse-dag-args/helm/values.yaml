@@ -1,0 +1,33 @@
+airflow:
+  scheduler:
+    replicaCount: 1
+  web:
+    replicaCount: 1
+  aws:
+    region: eu-west-1
+    iamRole: airflow-application
+  image:
+    repository: "airflow"
+    tag: "local"
+    airflowKubernetesWorkerContainerTag: "local"
+    pullPolicy: IfNotPresent
+  service:
+    type: NodePort
+    port: 80
+  serviceAccount:
+    name: airflow
+
+postgres:
+  replicaCount: 1
+  image:
+    repository: postgres
+    tag: 9.6
+    pullPolicy: IfNotPresent
+  service:
+    type: ClusterIP
+    port: 5432
+  db: airflow
+  user: airflow
+  password: 1q2w3e
+  container:
+    port: 5432

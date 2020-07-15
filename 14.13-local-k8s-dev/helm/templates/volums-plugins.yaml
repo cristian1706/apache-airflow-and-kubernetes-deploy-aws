@@ -1,0 +1,31 @@
+{{- if eq .Values.global.environment "localdev"}}
+kind: PersistentVolume
+apiVersion: v1
+metadata:
+  name: {{ include "airflow.fullname" . }}-plugins
+  labels:
+{{ include "airflow.labels" . | indent 4 }}
+spec:
+  capacity:
+    storage: 16Gi
+  volumeMode: Filesystem
+  accessModes:
+    - ReadWriteMany
+  storageClassName: standard
+  hostPath:
+    path: {{ .Values.airflowPath }}{{ .Values.airflow.mount.subPath.plugins }}
+---
+kind: PersistentVolumeClaim
+apiVersion: v1
+metadata:
+  name: {{ include "airflow.fullname" . }}-plugins
+  labels:
+{{ include "airflow.labels" . | indent 4 }}
+spec:
+  accessModes:
+    - ReadWriteMany
+  resources:
+    requests:
+      storage: 8Gi
+  volumeName: {{ include "airflow.fullname" . }}-plugins
+{{- end}}

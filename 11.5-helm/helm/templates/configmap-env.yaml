@@ -1,0 +1,24 @@
+apiVersion: v1
+kind: ConfigMap
+metadata:
+  name: {{ include "airflow.fullname" . }}-config
+  labels:
+{{ include "airflow.labels" . | indent 4 }}
+data:
+  AWS_DEFAULT_REGION: {{ .Values.airflow.aws.region }}
+  AIRFLOW__KUBERNETES__WORKER_CONTAINER_REPOSITORY: {{ .Values.airflow.image.repository }}
+  AIRFLOW__KUBERNETES__WORKER_CONTAINER_TAG: {{ .Values.airflow.image.airflowKubernetesWorkerContainerTag }}
+  AIRFLOW__KUBERNETES__CATCHUP_BY_DEFAULT: "False"
+  AIRFLOW__KUBERNETES__REMOTE_LOGGING: "False"
+  AIRFLOW__KUBERNETES__REMOTE_LOG_CONN_ID: ""
+  AIRFLOW__KUBERNETES__REMOTE_BASE_LOG_FOLDER: ""
+  AIRFLOW__KUBERNETES__ENV_FROM_CONFIGMAP_REF: {{ include "airflow.fullname" . }}-config
+  AIRFLOW__KUBERNETES__DAGS_IN_IMAGE: "True"
+  AIRFLOW__KUBERNETES__DELETE_WORKER_PODS: "True"
+  AIRFLOW__KUBERNETES__NAMESPACE: default
+  AIRFLOW__WEBSERVER__ACCESS_LOGFILE: /usr/local/airflow/logs/web.log
+  AIRFLOW__WEBSERVER__ERROR_LOGFILE: /usr/local/airflow/logs/web_error.log
+  AIRFLOW__SCHEDULER__STATSD_ON: "False"
+  AIRFLOW__CORE__DAG_PROCESSOR_MANAGER_LOG_LOCATION: /usr/local/airflow/logs/dag_processor_manager/dag_processor_manager.log
+  AIRFLOW__CORE__FERNET_KEY: "1HaqDtbDAywsAOkoSha3BhWNOdQ26slT6K0YaZeZdOz="
+  AIRFLOW__CORE__SQL_ALCHEMY_CONN: "postgresql+psycopg2://airflow:1q2w3e@postgres:5432/airflow"

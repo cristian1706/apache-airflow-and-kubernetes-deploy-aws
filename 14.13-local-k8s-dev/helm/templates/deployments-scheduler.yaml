@@ -1,0 +1,50 @@
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: {{ include "airflow.fullname" . }}-scheduler
+  labels:
+{{ include "airflow.labels" . | indent 4 }}
+spec:
+  replicas: {{ .Values.airflow.scheduler.replicaCount }}
+  selector:
+    matchLabels:
+      app.kubernetes.io/name: {{ include "airflow.name" . }}
+      app.kubernetes.io/instance: {{ .Release.Name }}
+  template:
+    metadata:
+      annotations:
+        iam.amazonaws.com/role: {{ .Values.airflow.aws.iamRole }}
+      labels:
+        app.kubernetes.io/name: {{ include "airflow.name" . }}
+        app.kubernetes.io/instance: {{ .Release.Name }}
+    spec:
+      serviceAccountName: {{ include "airflow.serviceAccountName" . }}
+      containers:
+        - name: {{ .Chart.Name }}-scheduler
+          image: {{ .Values.airflow.image.repository }}:{{ .Values.airflow.image.tag }}
+          imagePullPolicy: {{ .Values.airflow.image.pullPolicy }}
+          args: ["scheduler"]
+          envFrom:
+            - configMapRef:
+                name: {{ include "airflow.fullname" . }}-config
+        {{- if eq .Values.global.environment "localdev" }}
+          volumeMounts:
+            - mountPath: {{ .Values.airflow.mount.path }}{{ .Values.airflow.mount.subPath.dags }}
+              name: {{ include "airflow.fullname" . }}-dags
+            - mountPath: {{ .Values.airflow.mount.path }}{{ .Values.airflow.mount.subPath.logs }}
+              name: {{ include "airflow.fullname" . }}-logs
+            - mountPath: {{ .Values.airflow.mount.path }}{{ .Values.airflow.mount.subPath.plugins }}
+              name: {{ include "airflow.fullname" . }}-plugins
+          {{- end }}
+      {{- if eq .Values.global.environment "localdev" }}
+      volumes:
+        - name: {{ include "airflow.fullname" . }}-dags
+          hostPath:
+            path: {{ .Values.airflowPath }}{{ .Values.airflow.mount.subPath.dags }}
+        - name: {{ include "airflow.fullname" . }}-logs
+          hostPath:
+            path: {{ .Values.airflowPath }}{{ .Values.airflow.mount.subPath.logs }}
+        - name: {{ include "airflow.fullname" . }}-plugins
+          hostPath:
+            path: {{ .Values.airflowPath }}{{ .Values.airflow.mount.subPath.plugins }}
+      {{- end }}

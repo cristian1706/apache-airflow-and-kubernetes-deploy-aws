@@ -1,0 +1,36 @@
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: {{ include "airflow.fullname" . }}-web
+  labels:
+    app: web
+{{ include "airflow.labels" . | indent 4 }}
+spec:
+  replicas: {{ .Values.airflow.web.replicaCount }}
+  selector:
+    matchLabels:
+      app.kubernetes.io/name: {{ include "airflow.name" . }}
+      app.kubernetes.io/instance: {{ .Release.Name }}
+      app: web
+  template:
+    metadata:
+      annotations:
+        iam.amazonaws.com/role: {{ .Values.airflow.aws.iamRole }}
+      labels:
+        app: web
+        app.kubernetes.io/name: {{ include "airflow.name" . }}
+        app.kubernetes.io/instance: {{ .Release.Name }}
+    spec:
+      serviceAccountName: {{ include "airflow.serviceAccountName" . }}
+      containers:
+        - name: {{ .Chart.Name }}-web
+          image: {{ .Values.airflow.image.repository }}:{{ .Values.airflow.image.tag }}
+          imagePullPolicy: {{ .Values.airflow.image.pullPolicy }}
+          args: ["webserver"]
+          envFrom:
+            - configMapRef:
+                name: {{ include "airflow.fullname" . }}-config
+          ports:
+            - name: http
+              containerPort: 8080
+              protocol: TCP
